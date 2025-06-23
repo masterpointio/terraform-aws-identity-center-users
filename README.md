@@ -12,10 +12,11 @@ This Terraform module provisions, configures, and manages AWS IAM Identity Cente
 
 - This is designed to be seamless for organizations that want to **manage users within the AWS Identity Center directory as their identity source** instead of an external identity provider (such as Okta, Azure Active Directory, etc.). This means that all users are managed by IaC.
 
-#### Notes
+### Notes
 
-- Email verification is handled by AWS Identity Center. Upon user creation by TF, the user will be in AWS Identity Center directory, but will not be able to login until they have verified their email. However, the AWS Terraform provider does not support automatically sending a verification email after creation, so the administrator must go into the AWS Identity Center directory console and manually request to send a verification email.
-  ![AWS Identity Center User Verification](./aws-identity-center-user-verification-screenshot.jpg)
+- Email verification is handled by AWS Identity Center. Upon user creation by TF, the user will be in AWS Identity Center directory, but will not be able to login until they have verified their email.
+  - However, the AWS Terraform provider does not support automatically sending a verification email after creation, so the administrator must go into the AWS Identity Center directory console and manually request to send a verification email.
+    ![AWS Identity Center User Verification](./aws-identity-center-user-verification-screenshot.jpg)
 
 ## Usage
 
