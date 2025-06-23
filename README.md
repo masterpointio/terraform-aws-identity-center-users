@@ -84,11 +84,11 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_account_assignments"></a> [account\_assignments](#output\_account\_assignments) | n/a |
-| <a name="output_group_memberships"></a> [group\_memberships](#output\_group\_memberships) | n/a |
-| <a name="output_groups"></a> [groups](#output\_groups) | n/a |
-| <a name="output_permission_sets"></a> [permission\_sets](#output\_permission\_sets) | n/a |
-| <a name="output_users"></a> [users](#output\_users) | n/a |
+| <a name="output_account_assignments"></a> [account\_assignments](#output\_account\_assignments) | List of account assignments. |
+| <a name="output_group_memberships"></a> [group\_memberships](#output\_group\_memberships) | List of group memberships. |
+| <a name="output_groups"></a> [groups](#output\_groups) | Map of groups. |
+| <a name="output_permission_sets"></a> [permission\_sets](#output\_permission\_sets) | Map of permission sets. |
+| <a name="output_users"></a> [users](#output\_users) | Map of users. |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 <!-- markdownlint-enable MD013 -->
 <!-- prettier-ignore-end -->

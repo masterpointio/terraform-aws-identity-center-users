@@ -1,19 +1,24 @@
 output "users" {
-  value = local.users_map
+  description = "Map of users."
+  value       = local.users_map
 }
 
 output "groups" {
-  value = local.groups_map
+  description = "Map of groups."
+  value       = local.groups_map
 }
 
 output "group_memberships" {
-  value = local.group_memberships
+  description = "List of group memberships."
+  value       = local.group_memberships
 }
 
 output "account_assignments" {
-  value = local.account_assignments
+  description = "List of account assignments."
+  value       = local.account_assignments
 }
 
 output "permission_sets" {
-  value = local.permission_sets_map
+  description = "Map of permission sets."
+  value       = local.permission_sets_map
 }
