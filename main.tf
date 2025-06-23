@@ -29,9 +29,10 @@ locals {
   # Flatten the customer managed policy attachments for easier iteration
   customer_policy_attachments = flatten([
     for ps in var.permission_sets : [
-      for policy_arn in lookup(ps, "customer_managed_policy_attachments", []) : {
-        ps_name    = ps.name
-        policy_arn = policy_arn
+      for policy in lookup(ps, "customer_managed_policy_attachments", []) : {
+        ps_name     = ps.name
+        policy_name = policy.name
+        policy_path = lookup(policy, "path", "/")
       }
     ]
   ])
