@@ -23,10 +23,7 @@
     {
       "name": "Administrators",
       "description": "Administrator access",
-      "members": [
-        "user1.test-admin",
-        "user2.test-admin"
-      ],
+      "members": ["user1.test-admin", "user2.test-admin"],
       "assignments": [
         {
           "permission_set": "AdministratorAccess",
@@ -41,9 +38,7 @@
     {
       "name": "Read-Only Access",
       "description": "Read-only access",
-      "members": [
-        "user3.viewer"
-      ],
+      "members": ["user3.viewer"],
       "assignments": [
         {
           "permission_set": "ViewOnlyAccess",
@@ -57,9 +52,7 @@
       "name": "AdministratorAccess",
       "description": "Full administrator access to an account.",
       "session_duration": "PT12H",
-      "managed_policies": [
-        "arn:aws:iam::aws:policy/AdministratorAccess"
-      ]
+      "managed_policies": ["arn:aws:iam::aws:policy/AdministratorAccess"]
     },
     {
       "name": "ViewOnlyAccess",
