@@ -8,34 +8,81 @@
 
 ## Purpose and Functionality
 
-This repository serves as a template for creating Terraform modules, providing a standardized structure and essential files for efficient module development. It is designed to ensure consistency and promote our best practices across all Terraform projects.
+This Terraform module provisions, configures, and manages AWS IAM Identity Center (SSO) with built-in user provisioning, including assigning users, groups, and permission sets.
 
-It comes pre-configured with Masterpoint's curation of open source tools, which our team uses to operate more effectively within Terraform and OpenTofu codebases. Hmm.
+- This is designed to be seamless for organizations that want to **manage users within the AWS Identity Center directory as their identity source** instead of an external identity provider (such as Okta, Azure Active Directory, etc.). This means that all users are managed by IaC.
 
-- [**aqua**](https://aquaproj.github.io/): Declarative CLI tool verison manager
-- **tofu + terraform test workflows**: For continuously testing our TF code
-- [**terraform-docs**](https://terraform-docs.io/): Easily add terraform docs to the README
-- [**trunk**](https://docs.trunk.io/references/cli/getting-started): Trunk CLI for managing code quality (linters + checks)
-  - **actionlint**: Linter for GitHub Actions workflows
-  - **checkov**: Infrastructure as Code (IaC) security scanner
-  - **git-diff-check**: Checks for issues in git diffs
-  - **markdownlint**: Linter for Markdown files
-  - **prettier**: Code formatter for consistent style
-  - **renovate**: Automated dependency updates
-  - **tflint**: Terraform linter for best practices and error detection
-  - **trivy**: Scans containers and artifacts for vulnerabilities
-  - **trufflehog**: Secret and sensitive data scanner
-  - **yamllint**: Linter for YAML files
+### Notes:
+
+- Email verification is handled by AWS Identity Center. Upon user creation by TF, the user will be in AWS Identity Center directory, but will not be able to login until they have verified their email. However, the AWS Terraform provider does not support automatically sending a verification email after creation, so the administrator must go into the AWS Identity Center directory console and manually request to send a verification email.
+  ![AWS Identity Center User Verification](./aws-identity-center-user-verification-screenshot.jpg)
 
 ## Usage
 
-### Prerequisites (optional)
+### Prerequisites
 
-TODO
+- You will need to manually (ClickOps) enable AWS Identity Center & create an SSO instance in the AWS account that you want to be set as the "management account" for your organization. See https://docs.aws.amazon.com/singlesignon/latest/userguide/enable-identity-center.html
+- After enabling, Terraform can reference it using the `data "aws_ssoadmin_instances" "sso" {}` data source.
 
-### Step-by-Step Instructions
+### See below for a simplistic example of how to use this module
 
-TODO
+```hcl
+data "aws_ssoadmin_instances" "sso" {}
+
+locals {
+  instance_arn      = tolist(data.aws_ssoadmin_instances.sso.arns)[0]
+  identity_store_id = tolist(data.aws_ssoadmin_instances.sso.identity_store_ids)[0]
+}
+
+module "aws_sso" {
+  source = "github.com/masterpointio/terraform-aws-identity-center-users?ref=v1.x.x"
+
+  instance_arn      = local.instance_arn
+  identity_store_id = local.identity_store_id
+
+  users = [
+    {
+      user_name   = "john.doe"
+      given_name  = "John"
+      family_name = "Doe"
+      email       = "john.doe@example.com"
+    },
+  ]
+
+  groups = [
+    {
+      name        = "Administrators"
+      description = "Full administrative access"
+      members     = ["john.doe"]
+      assignments = [
+        {
+          permission_set = "AdministratorAccess"
+          account_ids    = ["123456789012", "234567890123"]
+        }
+      ]
+    },
+  ]
+
+  permission_sets = [
+    {
+      name             = "AdministratorAccess"
+      description      = "Full administrator access to an account."
+      session_duration = "PT12H"
+      managed_policies = [
+        "arn:aws:iam::aws:policy/AdministratorAccess"
+      ]
+    }
+  ]
+}
+```
+
+## Examples
+
+Here are some examples of using this module:
+
+- [`examples/complete`](./examples/complete) - example using a `tfvars` file to manage users, groups, and permission sets
+- [`examples/json-user-management`](./examples/json-user-management) - example using a `json` file to manage users, groups, and permission sets
+- [`examples/yaml-user-management`](./examples/yaml-user-management) - example using a `yaml` file to manage users, groups, and permission sets
 
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable MD013 -->
