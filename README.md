@@ -16,7 +16,7 @@ This Terraform module provisions, configures, and manages AWS IAM Identity Cente
 
 - Email verification is handled by AWS Identity Center. Upon user creation by TF, the user will be in AWS Identity Center directory, but will not be able to login until they have verified their email.
   - However, the AWS Terraform provider does not support automatically sending a verification email after creation, so the administrator must go into the AWS Identity Center directory console and manually request to send a verification email.
-    ![AWS Identity Center User Verification](./aws-identity-center-user-verification-screenshot.jpg)
+    ![AWS Identity Center User Verification](./aws-identity-center-user-verification-screenshot.png)
 
 ## Usage
 
