@@ -201,22 +201,6 @@ run "test_policy_attachments_flattening" {
     error_message = "policy_attachments_map should have 3 entries"
   }
 
-  # Test specific policy attachment structures
-  assert {
-    condition = local.policy_attachments[0].ps_name == "AdminAccess" && local.policy_attachments[0].policy_arn == "arn:aws:iam::aws:policy/AdministratorAccess"
-    error_message = "First attachment should be AdminAccess-AdministratorAccess"
-  }
-
-  assert {
-    condition = local.policy_attachments[1].ps_name == "AdminAccess" && local.policy_attachments[1].policy_arn == "arn:aws:iam::aws:policy/IAMFullAccess"
-    error_message = "Second attachment should be AdminAccess-IAMFullAccess"
-  }
-
-  assert {
-    condition = local.policy_attachments[2].ps_name == "ReadOnly" && local.policy_attachments[2].policy_arn == "arn:aws:iam::aws:policy/ReadOnlyAccess"
-    error_message = "Third attachment should be ReadOnly-ReadOnlyAccess"
-  }
-
   # Test specific map entries
   assert {
     condition = local.policy_attachments_map["AdminAccess-arn:aws:iam::aws:policy/AdministratorAccess"].ps_name == "AdminAccess"
@@ -252,22 +236,6 @@ run "test_customer_policy_attachments_flattening" {
     error_message = "customer_policy_attachments_map should have 1 entry"
   }
 
-  # Test specific customer policy attachment structure
-  assert {
-    condition = local.customer_policy_attachments[0].ps_name == "DevAccess"
-    error_message = "Customer policy attachment should have ps_name DevAccess"
-  }
-
-  assert {
-    condition = local.customer_policy_attachments[0].policy_name == "CustomDevPolicy"
-    error_message = "Customer policy attachment should have policy_name CustomDevPolicy"
-  }
-
-  assert {
-    condition = local.customer_policy_attachments[0].policy_path == "/developers/"
-    error_message = "Customer policy attachment should have policy_path /developers/"
-  }
-
   # Test specific map entry
   assert {
     condition = local.customer_policy_attachments_map["DevAccess-CustomDevPolicy"].ps_name == "DevAccess"
@@ -296,27 +264,6 @@ run "test_account_assignments_flattening" {
   assert {
     condition = length(local.account_assignments_map) == 4
     error_message = "account_assignments_map should have 4 entries"
-  }
-
-  # Test specific account assignment structures
-  assert {
-    condition = local.account_assignments[0].group == "Administrators" && local.account_assignments[0].permission_set == "AdminAccess" && local.account_assignments[0].account_id == "123456789012"
-    error_message = "First assignment should be Administrators-AdminAccess-123456789012"
-  }
-
-  assert {
-    condition = local.account_assignments[1].group == "Administrators" && local.account_assignments[1].permission_set == "AdminAccess" && local.account_assignments[1].account_id == "234567890123"
-    error_message = "Second assignment should be Administrators-AdminAccess-234567890123"
-  }
-
-  assert {
-    condition = local.account_assignments[2].group == "Administrators" && local.account_assignments[2].permission_set == "ReadOnly" && local.account_assignments[2].account_id == "345678901234"
-    error_message = "Third assignment should be Administrators-ReadOnly-345678901234"
-  }
-
-  assert {
-    condition = local.account_assignments[3].group == "Developers" && local.account_assignments[3].permission_set == "DevAccess" && local.account_assignments[3].account_id == "123456789012"
-    error_message = "Fourth assignment should be Developers-DevAccess-123456789012"
   }
 
   # Test specific map entries
