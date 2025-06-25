@@ -24,14 +24,17 @@ variable "groups" {
 variable "permission_sets" {
   description = "List of permission sets"
   type = list(object({
-    name                                = string
-    description                         = string
-    managed_policies                    = optional(list(string), [])
-    session_duration                    = optional(string, "PT12H")
-    inline_policy                       = optional(string, null)
-    relay_state                         = optional(string, null)
-    tags                                = optional(map(string), {})
-    customer_managed_policy_attachments = optional(list(string), [])
+    name             = string
+    description      = string
+    managed_policies = optional(list(string), [])
+    session_duration = optional(string, "PT12H")
+    inline_policy    = optional(string, null)
+    relay_state      = optional(string, null)
+    tags             = optional(map(string), {})
+    customer_managed_policy_attachments = optional(list(object({
+      name = string
+      path = optional(string, "/")
+    })), [])
   }))
 }
 

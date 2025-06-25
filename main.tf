@@ -56,7 +56,7 @@ locals {
   }
 
   customer_policy_attachments_map = {
-    for attachment in local.customer_policy_attachments : "${attachment.ps_name}-${attachment.policy_arn}" => attachment
+    for attachment in local.customer_policy_attachments : "${attachment.ps_name}-${attachment.policy_name}" => attachment
   }
 
   group_memberships_map = {
