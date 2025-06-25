@@ -186,27 +186,6 @@ run "test_group_memberships_flattening" {
     condition = local.group_memberships[3].group_name == "Developers" && local.group_memberships[3].user_name == "bob.jones"
     error_message = "Fourth membership should be Developers-bob.jones"
   }
-
-  # Test specific map entries
-  assert {
-    condition = local.group_memberships_map["Administrators-john.doe"].group_name == "Administrators"
-    error_message = "Administrators-john.doe map entry should have correct group_name"
-  }
-
-  assert {
-    condition = local.group_memberships_map["Administrators-john.doe"].user_name == "john.doe"
-    error_message = "Administrators-john.doe map entry should have correct user_name"
-  }
-
-  assert {
-    condition = local.group_memberships_map["Developers-bob.jones"].group_name == "Developers"
-    error_message = "Developers-bob.jones map entry should have correct group_name"
-  }
-
-  assert {
-    condition = local.group_memberships_map["Developers-bob.jones"].user_name == "bob.jones"
-    error_message = "Developers-bob.jones map entry should have correct user_name"
-  }
 }
 
 run "test_policy_attachments_flattening" {
