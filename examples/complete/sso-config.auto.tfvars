@@ -1,0 +1,76 @@
+# To onboard new users to AWS IAM Identity Center (AWS SSO),
+# 1. Add the user to the `users` list, then assign them to a group in the `groups` list.
+
+users = [
+  {
+    user_name   = "user1.test-admin"
+    given_name  = "User1"
+    family_name = "Test-Admin"
+    email       = "example+1@example.com"
+  },
+  {
+    user_name   = "user2.test-admin"
+    given_name  = "User2"
+    family_name = "Test-Admin"
+    email       = "example+2@example.com"
+  },
+  {
+    user_name   = "user3.viewer"
+    given_name  = "User3"
+    family_name = "Viewer"
+    email       = "example+3@example.com"
+  }
+]
+
+groups = [
+  {
+    name        = "Administrators"
+    description = "Administrator access"
+    members = [
+      "user1.test-admin",
+      "user2.test-admin"
+    ]
+    assignments = [
+      {
+        permission_set = "AdministratorAccess"
+        account_ids    = ["423762782458"]
+      },
+      {
+        permission_set = "ViewOnlyAccess"
+        account_ids    = ["423762782458"]
+      }
+    ]
+  },
+  {
+    name        = "Read-Only Access"
+    description = "Read-only access"
+    members = [
+      "user3.viewer"
+    ]
+    assignments = [
+      {
+        permission_set = "ViewOnlyAccess"
+        account_ids    = ["423762782458"]
+      }
+    ]
+  }
+]
+
+permission_sets = [
+  {
+    name             = "AdministratorAccess"
+    description      = "Full administrator access to an account."
+    session_duration = "PT12H"
+    managed_policies = [
+      "arn:aws:iam::aws:policy/AdministratorAccess"
+    ]
+  },
+  {
+    name             = "ViewOnlyAccess"
+    description      = "View-only access to most AWS services."
+    session_duration = "PT12H"
+    managed_policies = [
+      "arn:aws:iam::aws:policy/job-function/ViewOnlyAccess"
+    ]
+  }
+]

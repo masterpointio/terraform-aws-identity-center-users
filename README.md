@@ -1,6 +1,6 @@
 [![Banner][banner-image]](https://masterpoint.io/)
 
-# terraform-module-template
+# terraform-aws-identity-center-users
 
 [![Release][release-badge]][latest-release]
 
@@ -8,34 +8,82 @@
 
 ## Purpose and Functionality
 
-This repository serves as a template for creating Terraform modules, providing a standardized structure and essential files for efficient module development. It is designed to ensure consistency and promote our best practices across all Terraform projects.
+This Terraform module provisions, configures, and manages AWS IAM Identity Center (SSO) with built-in user provisioning, including assigning users, groups, and permission sets.
 
-It comes pre-configured with Masterpoint's curation of open source tools, which our team uses to operate more effectively within Terraform and OpenTofu codebases.
+- This is designed to be seamless for organizations that want to **manage users within the AWS Identity Center directory as their identity source** instead of an external identity provider (such as Okta, Azure Active Directory, etc.). This means that all users are managed by IaC.
 
-- [**aqua**](https://aquaproj.github.io/): Declarative CLI tool verison manager
-- **tofu + terraform test workflows**: For continuously testing our TF code
-- [**terraform-docs**](https://terraform-docs.io/): Easily add terraform docs to the README
-- [**trunk**](https://docs.trunk.io/references/cli/getting-started): Trunk CLI for managing code quality (linters + checks)
-  - **actionlint**: Linter for GitHub Actions workflows
-  - **checkov**: Infrastructure as Code (IaC) security scanner
-  - **git-diff-check**: Checks for issues in git diffs
-  - **markdownlint**: Linter for Markdown files
-  - **prettier**: Code formatter for consistent style
-  - **renovate**: Automated dependency updates
-  - **tflint**: Terraform linter for best practices and error detection
-  - **trivy**: Scans containers and artifacts for vulnerabilities
-  - **trufflehog**: Secret and sensitive data scanner
-  - **yamllint**: Linter for YAML files
+### Notes
+
+- Email verification is handled by AWS Identity Center. Upon user creation by TF, the user will be in AWS Identity Center directory, but will not be able to login until they have verified their email.
+  - However, the AWS Terraform provider does not support automatically sending a verification email after creation, so the administrator must go into the AWS Identity Center directory console and manually request to send a verification email.
+    ![AWS Identity Center User Verification](./aws-identity-center-user-verification-screenshot.png)
 
 ## Usage
 
-### Prerequisites (optional)
+### Prerequisites
 
-TODO
+- You will need to manually (ClickOps) enable AWS Identity Center & create an SSO instance in the AWS account that you want to be set as the "management account" for your organization. See https://docs.aws.amazon.com/singlesignon/latest/userguide/enable-identity-center.html
+- After enabling, Terraform can reference it using the `data "aws_ssoadmin_instances" "sso" {}` data source.
 
-### Step-by-Step Instructions
+### See below for a simplistic example of how to use this module
 
-TODO
+```hcl
+data "aws_ssoadmin_instances" "sso" {}
+
+locals {
+  instance_arn      = tolist(data.aws_ssoadmin_instances.sso.arns)[0]
+  identity_store_id = tolist(data.aws_ssoadmin_instances.sso.identity_store_ids)[0]
+}
+
+module "aws_sso" {
+  source = "github.com/masterpointio/terraform-aws-identity-center-users?ref=v1.x.x"
+
+  instance_arn      = local.instance_arn
+  identity_store_id = local.identity_store_id
+
+  users = [
+    {
+      user_name   = "john.doe"
+      given_name  = "John"
+      family_name = "Doe"
+      email       = "john.doe@example.com"
+    },
+  ]
+
+  groups = [
+    {
+      name        = "Administrators"
+      description = "Full administrative access"
+      members     = ["john.doe"]
+      assignments = [
+        {
+          permission_set = "AdministratorAccess"
+          account_ids    = ["123456789012", "234567890123"]
+        }
+      ]
+    },
+  ]
+
+  permission_sets = [
+    {
+      name             = "AdministratorAccess"
+      description      = "Full administrator access to an account."
+      session_duration = "PT12H"
+      managed_policies = [
+        "arn:aws:iam::aws:policy/AdministratorAccess"
+      ]
+    }
+  ]
+}
+```
+
+## Examples
+
+Here are some examples of using this module:
+
+- [`examples/complete`](./examples/complete) - example using a `tfvars` file to manage users, groups, and permission sets
+- [`examples/json-user-management`](./examples/json-user-management) - example using a `json` file to manage users, groups, and permission sets
+- [`examples/yaml-user-management`](./examples/yaml-user-management) - example using a `yaml` file to manage users, groups, and permission sets
 
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable MD013 -->
@@ -44,56 +92,51 @@ TODO
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_random"></a> [random](#provider\_random) | >= 3.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.0 |
 
 ## Modules
 
-| Name | Source | Version |
-|------|--------|---------|
-| <a name="module_this"></a> [this](#module\_this) | cloudposse/label/null | 0.25.0 |
+No modules.
 
 ## Resources
 
 | Name | Type |
 |------|------|
-| [random_pet.template](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/pet) | resource |
+| [aws_identitystore_group.groups](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/identitystore_group) | resource |
+| [aws_identitystore_group_membership.memberships](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/identitystore_group_membership) | resource |
+| [aws_identitystore_user.users](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/identitystore_user) | resource |
+| [aws_ssoadmin_account_assignment.assignments](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_account_assignment) | resource |
+| [aws_ssoadmin_customer_managed_policy_attachment.customer_policies](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_customer_managed_policy_attachment) | resource |
+| [aws_ssoadmin_managed_policy_attachment.policies](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_managed_policy_attachment) | resource |
+| [aws_ssoadmin_permission_set.permissions](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_permission_set) | resource |
+| [aws_ssoadmin_permission_set_inline_policy.inline_policies](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssoadmin_permission_set_inline_policy) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_additional_tag_map"></a> [additional\_tag\_map](#input\_additional\_tag\_map) | Additional key-value pairs to add to each map in `tags_as_list_of_maps`. Not added to `tags` or `id`.<br/>This is for some rare cases where resources want additional configuration of tags<br/>and therefore take a list of maps with tag key, value, and additional configuration. | `map(string)` | `{}` | no |
-| <a name="input_attributes"></a> [attributes](#input\_attributes) | ID element. Additional attributes (e.g. `workers` or `cluster`) to add to `id`,<br/>in the order they appear in the list. New attributes are appended to the<br/>end of the list. The elements of the list are joined by the `delimiter`<br/>and treated as a single ID element. | `list(string)` | `[]` | no |
-| <a name="input_context"></a> [context](#input\_context) | Single object for setting entire context at once.<br/>See description of individual variables for details.<br/>Leave string and numeric variables as `null` to use default value.<br/>Individual variable settings (non-null) override settings in context object,<br/>except for attributes, tags, and additional\_tag\_map, which are merged. | `any` | <pre>{<br/>  "additional_tag_map": {},<br/>  "attributes": [],<br/>  "delimiter": null,<br/>  "descriptor_formats": {},<br/>  "enabled": true,<br/>  "environment": null,<br/>  "id_length_limit": null,<br/>  "label_key_case": null,<br/>  "label_order": [],<br/>  "label_value_case": null,<br/>  "labels_as_tags": [<br/>    "unset"<br/>  ],<br/>  "name": null,<br/>  "namespace": null,<br/>  "regex_replace_chars": null,<br/>  "stage": null,<br/>  "tags": {},<br/>  "tenant": null<br/>}</pre> | no |
-| <a name="input_delimiter"></a> [delimiter](#input\_delimiter) | Delimiter to be used between ID elements.<br/>Defaults to `-` (hyphen). Set to `""` to use no delimiter at all. | `string` | `null` | no |
-| <a name="input_descriptor_formats"></a> [descriptor\_formats](#input\_descriptor\_formats) | Describe additional descriptors to be output in the `descriptors` output map.<br/>Map of maps. Keys are names of descriptors. Values are maps of the form<br/>`{<br/>   format = string<br/>   labels = list(string)<br/>}`<br/>(Type is `any` so the map values can later be enhanced to provide additional options.)<br/>`format` is a Terraform format string to be passed to the `format()` function.<br/>`labels` is a list of labels, in order, to pass to `format()` function.<br/>Label values will be normalized before being passed to `format()` so they will be<br/>identical to how they appear in `id`.<br/>Default is `{}` (`descriptors` output will be empty). | `any` | `{}` | no |
-| <a name="input_enabled"></a> [enabled](#input\_enabled) | Set to false to prevent the module from creating any resources | `bool` | `null` | no |
-| <a name="input_environment"></a> [environment](#input\_environment) | ID element. Usually used for region e.g. 'uw2', 'us-west-2', OR role 'prod', 'staging', 'dev', 'UAT' | `string` | `null` | no |
-| <a name="input_id_length_limit"></a> [id\_length\_limit](#input\_id\_length\_limit) | Limit `id` to this many characters (minimum 6).<br/>Set to `0` for unlimited length.<br/>Set to `null` for keep the existing setting, which defaults to `0`.<br/>Does not affect `id_full`. | `number` | `null` | no |
-| <a name="input_label_key_case"></a> [label\_key\_case](#input\_label\_key\_case) | Controls the letter case of the `tags` keys (label names) for tags generated by this module.<br/>Does not affect keys of tags passed in via the `tags` input.<br/>Possible values: `lower`, `title`, `upper`.<br/>Default value: `title`. | `string` | `null` | no |
-| <a name="input_label_order"></a> [label\_order](#input\_label\_order) | The order in which the labels (ID elements) appear in the `id`.<br/>Defaults to ["namespace", "environment", "stage", "name", "attributes"].<br/>You can omit any of the 6 labels ("tenant" is the 6th), but at least one must be present. | `list(string)` | `null` | no |
-| <a name="input_label_value_case"></a> [label\_value\_case](#input\_label\_value\_case) | Controls the letter case of ID elements (labels) as included in `id`,<br/>set as tag values, and output by this module individually.<br/>Does not affect values of tags passed in via the `tags` input.<br/>Possible values: `lower`, `title`, `upper` and `none` (no transformation).<br/>Set this to `title` and set `delimiter` to `""` to yield Pascal Case IDs.<br/>Default value: `lower`. | `string` | `null` | no |
-| <a name="input_labels_as_tags"></a> [labels\_as\_tags](#input\_labels\_as\_tags) | Set of labels (ID elements) to include as tags in the `tags` output.<br/>Default is to include all labels.<br/>Tags with empty values will not be included in the `tags` output.<br/>Set to `[]` to suppress all generated tags.<br/>**Notes:**<br/>  The value of the `name` tag, if included, will be the `id`, not the `name`.<br/>  Unlike other `null-label` inputs, the initial setting of `labels_as_tags` cannot be<br/>  changed in later chained modules. Attempts to change it will be silently ignored. | `set(string)` | <pre>[<br/>  "default"<br/>]</pre> | no |
-| <a name="input_length"></a> [length](#input\_length) | The length of the random name | `number` | `2` | no |
-| <a name="input_name"></a> [name](#input\_name) | ID element. Usually the component or solution name, e.g. 'app' or 'jenkins'.<br/>This is the only ID element not also included as a `tag`.<br/>The "name" tag is set to the full `id` string. There is no tag with the value of the `name` input. | `string` | `null` | no |
-| <a name="input_namespace"></a> [namespace](#input\_namespace) | ID element. Usually an abbreviation of your organization name, e.g. 'eg' or 'cp', to help ensure generated IDs are globally unique | `string` | `null` | no |
-| <a name="input_regex_replace_chars"></a> [regex\_replace\_chars](#input\_regex\_replace\_chars) | Terraform regular expression (regex) string.<br/>Characters matching the regex will be removed from the ID elements.<br/>If not set, `"/[^a-zA-Z0-9-]/"` is used to remove all characters other than hyphens, letters and digits. | `string` | `null` | no |
-| <a name="input_stage"></a> [stage](#input\_stage) | ID element. Usually used to indicate role, e.g. 'prod', 'staging', 'source', 'build', 'test', 'deploy', 'release' | `string` | `null` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | Additional tags (e.g. `{'BusinessUnit': 'XYZ'}`).<br/>Neither the tag keys nor the tag values will be modified by this module. | `map(string)` | `{}` | no |
-| <a name="input_tenant"></a> [tenant](#input\_tenant) | ID element \_(Rarely used, not included by default)\_. A customer identifier, indicating who this instance of a resource is for | `string` | `null` | no |
+| <a name="input_groups"></a> [groups](#input\_groups) | List of SSO groups | <pre>list(object({<br/>    name        = string<br/>    description = string<br/>    members     = list(string)<br/>    assignments = optional(list(object({<br/>      permission_set = string<br/>      account_ids    = list(string)<br/>    })), [])<br/>  }))</pre> | n/a | yes |
+| <a name="input_identity_store_id"></a> [identity\_store\_id](#input\_identity\_store\_id) | Identity store ID | `string` | n/a | yes |
+| <a name="input_instance_arn"></a> [instance\_arn](#input\_instance\_arn) | SSO instance ARN | `string` | n/a | yes |
+| <a name="input_permission_sets"></a> [permission\_sets](#input\_permission\_sets) | List of permission sets | <pre>list(object({<br/>    name             = string<br/>    description      = string<br/>    managed_policies = optional(list(string), [])<br/>    session_duration = optional(string, "PT12H") # The length of time that the application user sessions in the ISO-8601 standard<br/>    inline_policy    = optional(string, null)<br/>    relay_state      = optional(string, null)<br/>    tags             = optional(map(string), {})<br/>    customer_managed_policy_attachments = optional(list(object({<br/>      name = string<br/>      path = optional(string, "/")<br/>    })), [])<br/>  }))</pre> | n/a | yes |
+| <a name="input_users"></a> [users](#input\_users) | List of SSO users | <pre>list(object({<br/>    user_name   = string<br/>    given_name  = string<br/>    family_name = string<br/>    email       = string<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_random_pet_name"></a> [random\_pet\_name](#output\_random\_pet\_name) | The generated random pet name |
+| <a name="output_account_assignments"></a> [account\_assignments](#output\_account\_assignments) | List of account assignments. |
+| <a name="output_group_memberships"></a> [group\_memberships](#output\_group\_memberships) | List of group memberships. |
+| <a name="output_groups"></a> [groups](#output\_groups) | Map of groups. |
+| <a name="output_permission_sets"></a> [permission\_sets](#output\_permission\_sets) | Map of permission sets. |
+| <a name="output_users"></a> [users](#output\_users) | Map of users. |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 <!-- markdownlint-enable MD013 -->
 <!-- prettier-ignore-end -->
@@ -155,11 +198,8 @@ Copyright © 2016-2025 [Masterpoint Consulting LLC](https://masterpoint.io/)
 [newsletter-url]: https://newsletter.masterpoint.io/
 [youtube-badge]: https://img.shields.io/badge/YouTube-Subscribe-D191BF?style=for-the-badge&logo=youtube&logoColor=white
 [youtube-url]: https://www.youtube.com/channel/UCeeDaO2NREVlPy9Plqx-9JQ
-
-<!-- TODO: Replace `terraform-module-template` with your actual repository name. -->
-
-[release-badge]: https://img.shields.io/github/v/release/masterpointio/terraform-module-template?color=0E383A&label=Release&style=for-the-badge&logo=github&logoColor=white
-[latest-release]: https://github.com/masterpointio/terraform-module-template/releases/latest
-[contributors-image]: https://contrib.rocks/image?repo=masterpointio/terraform-module-template
-[contributors-url]: https://github.com/masterpointio/terraform-module-template/graphs/contributors
-[issues-url]: https://github.com/masterpointio/terraform-module-template/issues
+[release-badge]: https://img.shields.io/github/v/release/masterpointio/terraform-aws-identity-center-users?color=0E383A&label=Release&style=for-the-badge&logo=github&logoColor=white
+[latest-release]: https://github.com/masterpointio/terraform-aws-identity-center-users/releases/latest
+[contributors-image]: https://contrib.rocks/image?repo=masterpointio/terraform-aws-identity-center-users
+[contributors-url]: https://github.com/masterpointio/terraform-aws-identity-center-users/graphs/contributors
+[issues-url]: https://github.com/masterpointio/terraform-aws-identity-center-users/issues
