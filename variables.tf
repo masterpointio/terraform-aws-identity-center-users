@@ -27,7 +27,7 @@ variable "permission_sets" {
     name             = string
     description      = string
     managed_policies = optional(list(string), [])
-    session_duration = optional(string, "PT12H")
+    session_duration = optional(string, "PT12H") # The length of time that the application user sessions in the ISO-8601 standard
     inline_policy    = optional(string, null)
     relay_state      = optional(string, null)
     tags             = optional(map(string), {})
