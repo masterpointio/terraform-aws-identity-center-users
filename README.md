@@ -15,14 +15,15 @@ This Terraform module provisions, configures, and manages AWS IAM Identity Cente
 ### Notes
 
 - Email verification is handled by AWS Identity Center. Upon user creation by TF, the user will be in AWS Identity Center directory, but will not be able to login until they have verified their email.
-  - However, the AWS Terraform provider does not support automatically sending a verification email after creation, so the administrator must go into the AWS Identity Center directory console and manually request to send a verification email.
+  - However, the AWS Terraform provider does not support automatically sending a verification email after creation, so the administrator must go into the AWS Identity Center directory console and and enable "Send email OTP for users created from API", or manually request to send a verification email per each user.
+    ![AWS Identity Center Email OTP](./aws-identity-center-user-email-otp.png)
     ![AWS Identity Center User Verification](./aws-identity-center-user-verification-screenshot.png)
 
 ## Usage
 
 ### Prerequisites
 
-- You will need to manually (ClickOps) enable AWS Identity Center & create an SSO instance in the AWS account that you want to be set as the "management account" for your organization. See https://docs.aws.amazon.com/singlesignon/latest/userguide/enable-identity-center.html
+- You will need to manually (ClickOps) enable AWS Identity Center & create an SSO instance in the AWS account that you want to be set as the "management account" for your organization. See https://docs.aws.amazon.com/singlesignon/latest/userguide/enable-identity-center.html. The SSO instance itself is not managed by Terraform, there is no Terraform resource for it. Settings like MFA configurations must be updated on the AWS console ClickOps.
 - After enabling, Terraform can reference it using the `data "aws_ssoadmin_instances" "sso" {}` data source.
 
 ### See below for a simplistic example of how to use this module
